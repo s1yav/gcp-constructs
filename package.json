@@ -1,0 +1,74 @@
+{
+  "name": "gcp-constructs",
+  "version": "1.0.0",
+  "description": "Reusable Pulumi Google Cloud Platform (GCP) Component Constructs",
+  "main": "dist/index.js",
+  "types": "dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "default": "./dist/index.js"
+    },
+    "./artifactregistry/*": {
+      "types": "./dist/artifactregistry/*.d.ts",
+      "default": "./dist/artifactregistry/*.js"
+    },
+    "./cloudbuild/*": {
+      "types": "./dist/cloudbuild/*.d.ts",
+      "default": "./dist/cloudbuild/*.js"
+    },
+    "./cloudbuildv2/*": {
+      "types": "./dist/cloudbuildv2/*.d.ts",
+      "default": "./dist/cloudbuildv2/*.js"
+    },
+    "./cloudrunv2/*": {
+      "types": "./dist/cloudrunv2/*.d.ts",
+      "default": "./dist/cloudrunv2/*.js"
+    },
+    "./developerconnect/*": {
+      "types": "./dist/developerconnect/*.d.ts",
+      "default": "./dist/developerconnect/*.js"
+    },
+    "./projects/*": {
+      "types": "./dist/projects/*.d.ts",
+      "default": "./dist/projects/*.js"
+    },
+    "./serviceaccount/*": {
+      "types": "./dist/serviceaccount/*.d.ts",
+      "default": "./dist/serviceaccount/*.js"
+    }
+  },
+  "scripts": {
+    "build": "tsc",
+    "prepublishOnly": "npm run build"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/s1yav/gcp-constructs.git"
+  },
+  "keywords": [
+    "pulumi",
+    "gcp",
+    "constructs",
+    "cloud",
+    "infrastructure-as-code"
+  ],
+  "author": "s1yav",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/s1yav/gcp-constructs/issues"
+  },
+  "homepage": "https://github.com/s1yav/gcp-constructs#readme",
+  "devDependencies": {
+    "@types/node": "^18.19.130",
+    "typescript": "^5.8.2"
+  },
+  "peerDependencies": {
+    "@pulumi/gcp": ">=8.0.0",
+    "@pulumi/pulumi": ">=3.0.0"
+  },
+  "dependencies": {
+    "@pulumi/gcp": "^9.0.0",
+    "@pulumi/pulumi": "^3.113.0"
+  }
+}
