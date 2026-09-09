@@ -1,79 +1,79 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as cloudbuild from "@pulumi/gcp/cloudbuild";
-import * as input from "@pulumi/gcp/types/input";
+import { ComponentResource, ComponentResourceOptions, Input, Output, interpolate } from "@pulumi/pulumi";
+import { Trigger as GcpTrigger } from "@pulumi/gcp/cloudbuild";
+import type { input } from "@pulumi/gcp/types";
 
 export interface TriggerArgs {
     /**
      * The GCP Project ID.
      */
-    projectId: pulumi.Input<string>;
+    projectId: Input<string>;
 
     /**
      * The location/region for the trigger.
      */
-    location: pulumi.Input<string>;
+    location: Input<string>;
 
     /**
      * The resource ID of the Cloud Build repository.
      */
-    repository: pulumi.Input<string>;
+    repository: Input<string>;
 
     /**
      * Regex pattern of branches to trigger builds (e.g. "feature-.*").
      */
-    branchFilter: pulumi.Input<string>;
+    branchFilter: Input<string>;
 
     /**
      * The path to the Cloud Build configuration file in the repository (e.g. "cloudbuild.yaml").
      */
-    filename: pulumi.Input<string>;
+    filename: Input<string>;
 
     /**
      * The pull request trigger configuration for repository.
      */
-    pullRequest?: pulumi.Input<input.cloudbuild.TriggerRepositoryEventConfigPullRequest> | undefined;
+    pullRequest?: Input<input.cloudbuild.TriggerRepositoryEventConfigPullRequest> | undefined;
 
     /**
      * The commit push trigger configuration for repository.
      */
-    push?: pulumi.Input<input.cloudbuild.TriggerRepositoryEventConfigPush> | undefined;
+    push?: Input<input.cloudbuild.TriggerRepositoryEventConfigPush> | undefined;
 
     /**
      * The service account used for trigger execution.
      * Must be a user-managed service account (e.g. name@project.iam.gserviceaccount.com).
      */
-    serviceAccount: pulumi.Input<string>;
+    serviceAccount: Input<string>;
 
     /**
      * Map of user-defined substitutions for the trigger.
      * Keys must start with an underscore (e.g. "_ARTIFACT_REGISTRY_NAME").
      */
-    substitutions?: pulumi.Input<{ [key: string]: pulumi.Input<string> }>;
+    substitutions?: Input<{ [key: string]: Input<string> }>;
 }
 
 /**
  * Resolves the service account used for trigger execution.
  * Formats the provided service account ID to the full GCP resource name path.
  */
-function resolveServiceAccount(projectId: pulumi.Input<string>, serviceAccount: pulumi.Input<string>): pulumi.Output<string> {
-    return pulumi.interpolate`projects/${projectId}/serviceAccounts/${serviceAccount}`;
+function resolveServiceAccount(projectId: Input<string>, serviceAccount: Input<string>): Output<string> {
+    return interpolate`projects/${projectId}/serviceAccounts/${serviceAccount}`;
 }
 
 /**
  * Trigger Component Resource
  * Provisions a Google Cloud Build trigger linked to GitHub repository push events.
  */
-export class Trigger extends pulumi.ComponentResource {
-    public readonly trigger: cloudbuild.Trigger;
+export class Trigger extends ComponentResource {
+    public readonly trigger: GcpTrigger;
 
-    constructor(name: string, args: TriggerArgs, opts?: pulumi.ComponentResourceOptions) {
+    constructor(name: string, args: TriggerArgs, opts?: ComponentResourceOptions) {
         super("custom:components:Trigger", name, args, opts);
 
         // Resolve the service account to be used for the trigger execution
         const serviceAccount = resolveServiceAccount(args.projectId, args.serviceAccount);
 
         // Create the Cloud Build trigger linked to repository push events
-        this.trigger = new cloudbuild.Trigger(name, {
+        this.trigger = new GcpTrigger(name, {
             location: args.location,
             repositoryEventConfig: {
                 repository: args.repository,

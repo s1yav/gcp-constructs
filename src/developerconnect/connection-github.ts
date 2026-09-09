@@ -1,33 +1,33 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as gcp from "@pulumi/gcp";
-import * as secretmanager from "@pulumi/gcp/secretmanager";
-import * as developerconnect from "@pulumi/gcp/developerconnect";
+import { ComponentResource, ComponentResourceOptions, Input, Resource, all } from "@pulumi/pulumi";
+import { Connection } from "@pulumi/gcp/developerconnect";
+import { ServiceIdentity } from "@pulumi/gcp/projects";
+import { Secret, SecretIamMember } from "@pulumi/gcp/secretmanager";
 
 export interface ConnectionGithubArgs {
     /**
      * The GCP Secret resource ID or name holding the GitHub access token.
      */
-    githubAccessTokenId: pulumi.Input<string>;
+    githubAccessTokenId: Input<string>;
 
     /**
      * The location/region for the connection.
      */
-    location: pulumi.Input<string>;
+    location: Input<string>;
 
     /**
      * The ID of the connection to create.
      */
-    connectionId: pulumi.Input<string>;
+    connectionId: Input<string>;
 
     /**
      * The GitHub App Installation ID.
      */
-    appInstallationId: pulumi.Input<string>;
+    appInstallationId: Input<string>;
 
     /**
      * The GCP Project ID.
      */
-    projectId: pulumi.Input<string>;
+    projectId: Input<string>;
 }
 
 /**
@@ -35,11 +35,11 @@ export interface ConnectionGithubArgs {
  */
 function grantSecretAccessor(
     name: string,
-    secretId: pulumi.Input<string>,
-    member: pulumi.Input<string>,
-    parent: pulumi.Resource
-): secretmanager.SecretIamMember {
-    return new secretmanager.SecretIamMember(name, {
+    secretId: Input<string>,
+    member: Input<string>,
+    parent: Resource
+): SecretIamMember {
+    return new SecretIamMember(name, {
         secretId: secretId,
         role: "roles/secretmanager.secretAccessor",
         member: member,
@@ -51,17 +51,17 @@ function grantSecretAccessor(
  * Sets up a Developer Connect connection to GitHub, provisions the necessary IAM policy
  * for the Developer Connect service agent to access the GitHub token secret, and links it.
  */
-export class ConnectionGithub extends pulumi.ComponentResource {
-    public readonly connection: developerconnect.Connection;
+export class ConnectionGithub extends ComponentResource {
+    public readonly connection: Connection;
 
-    constructor(name: string, args: ConnectionGithubArgs, opts?: pulumi.ComponentResourceOptions) {
+    constructor(name: string, args: ConnectionGithubArgs, opts?: ComponentResourceOptions) {
         super("custom:components:ConnectionGithub", name, args, opts);
 
         // Get the existing Secret resource using its ID/Path
-        const githubAccessTokenSecret = secretmanager.Secret.get(`${name}-access-token`, args.githubAccessTokenId, {}, { parent: this });
+        const githubAccessTokenSecret = Secret.get(`${name}-access-token`, args.githubAccessTokenId, {}, { parent: this });
 
         // 1. Get/Create the Developer Connect Service Identity
-        const devconnectServiceIdentity = new gcp.projects.ServiceIdentity(`${name}-identity`, {
+        const devconnectServiceIdentity = new ServiceIdentity(`${name}-identity`, {
             service: "developerconnect.googleapis.com",
         }, { parent: this });
 
@@ -73,7 +73,7 @@ export class ConnectionGithub extends pulumi.ComponentResource {
             this
         );
 
-        const oauthTokenSecretVersion = pulumi.all([args.projectId, githubAccessTokenSecret.id]).apply(([proj, id]) => {
+        const oauthTokenSecretVersion = all([args.projectId, githubAccessTokenSecret.id]).apply(([proj, id]) => {
             if (id.startsWith("projects/")) {
                 return `${id}/versions/1`;
             }
@@ -81,7 +81,7 @@ export class ConnectionGithub extends pulumi.ComponentResource {
         });
 
         // 4. Create the Developer Connect Connection
-        this.connection = new developerconnect.Connection(name, {
+        this.connection = new Connection(name, {
             location: args.location,
             connectionId: args.connectionId,
             githubConfig: {

@@ -1,33 +1,34 @@
-import * as pulumi from "@pulumi/pulumi";
-import * as gcp from "@pulumi/gcp";
-import * as cloudbuildv2 from "@pulumi/gcp/cloudbuildv2";
-import * as secretmanager from "@pulumi/gcp/secretmanager";
+import { ComponentResource, ComponentResourceOptions, Input, Resource, all } from "@pulumi/pulumi";
+import { Connection } from "@pulumi/gcp/cloudbuildv2";
+import { getProjectOutput } from "@pulumi/gcp/organizations";
+import { ServiceIdentity } from "@pulumi/gcp/projects";
+import { SecretIamMember } from "@pulumi/gcp/secretmanager";
 
 export interface ConnectionGithubArgs {
     /**
      * The GCP Secret resource ID or name holding the GitHub access token.
      */
-    githubAccessTokenId: pulumi.Input<string>;
+    githubAccessTokenId: Input<string>;
 
     /**
      * The name of the connection to create.
      */
-    connectionName: pulumi.Input<string>;
+    connectionName: Input<string>;
 
     /**
      * The location/region for the connection.
      */
-    location: pulumi.Input<string>;
+    location: Input<string>;
 
     /**
      * The GitHub App Installation ID.
      */
-    appInstallationId: pulumi.Input<number>;
+    appInstallationId: Input<number>;
 
     /**
      * Project ID
      */
-    projectId: pulumi.Input<string>;
+    projectId: Input<string>;
 }
 
 /**
@@ -35,11 +36,11 @@ export interface ConnectionGithubArgs {
  */
 function grantSecretAccessor(
     name: string,
-    secretId: pulumi.Input<string>,
-    member: pulumi.Input<string>,
-    parent: pulumi.Resource
-): secretmanager.SecretIamMember {
-    return new secretmanager.SecretIamMember(name, {
+    secretId: Input<string>,
+    member: Input<string>,
+    parent: Resource
+): SecretIamMember {
+    return new SecretIamMember(name, {
         secretId: secretId,
         role: "roles/secretmanager.secretAccessor",
         member: member,
@@ -51,19 +52,19 @@ function grantSecretAccessor(
  * Provisions a Secret Manager secret with the GitHub token, sets up the IAM permissions for
  * cloudbuild to access it, and creates the cloudbuild Gen 2 connection to GitHub.
  */
-export class ConnectionGithub extends pulumi.ComponentResource {
-    public readonly connection: cloudbuildv2.Connection;
+export class ConnectionGithub extends ComponentResource {
+    public readonly connection: Connection;
 
-    constructor(name: string, args: ConnectionGithubArgs, opts?: pulumi.ComponentResourceOptions) {
+    constructor(name: string, args: ConnectionGithubArgs, opts?: ComponentResourceOptions) {
         super("custom:components:ConnectionGithub", name, args, opts);
 
         // 1. Get/Create the Cloud Build Service Identity
-        const legacyCloudbuildServiceIdentity = new gcp.projects.ServiceIdentity(`${name}-identity`, {
+        const legacyCloudbuildServiceIdentity = new ServiceIdentity(`${name}-identity`, {
             service: "cloudbuild.googleapis.com",
         }, { parent: this });
 
         // Get the project details to retrieve the project number
-        const project = gcp.organizations.getProjectOutput({
+        const project = getProjectOutput({
             projectId: args.projectId,
         });
 
@@ -85,7 +86,7 @@ export class ConnectionGithub extends pulumi.ComponentResource {
             this
         );
 
-        const oauthTokenSecretVersion = pulumi.all([args.projectId, args.githubAccessTokenId]).apply(([proj, id]) => {
+        const oauthTokenSecretVersion = all([args.projectId, args.githubAccessTokenId]).apply(([proj, id]) => {
             if (id.startsWith("projects/")) {
                 return `${id}/versions/1`;
             }
@@ -93,7 +94,7 @@ export class ConnectionGithub extends pulumi.ComponentResource {
         });
 
         // 4. Create the cloudbuild Gen 2 Connection
-        this.connection = new cloudbuildv2.Connection(name, {
+        this.connection = new Connection(name, {
             location: args.location,
             name: args.connectionName,
             githubConfig: {
