@@ -49,6 +49,16 @@ export interface TriggerArgs {
      * Keys must start with an underscore (e.g. "_ARTIFACT_REGISTRY_NAME").
      */
     substitutions?: Input<{ [key: string]: Input<string> }>;
+
+    /**
+     * Files to include in the trigger (glob patterns).
+     */
+    includedFiles?: Input<Input<string>[]>;
+
+    /**
+     * Files to ignore in the trigger (glob patterns).
+     */
+    ignoredFiles?: Input<Input<string>[]>;
 }
 
 /**
@@ -83,6 +93,8 @@ export class Trigger extends ComponentResource {
             filename: args.filename,
             serviceAccount: serviceAccount,
             substitutions: args.substitutions,
+            includedFiles: args.includedFiles,
+            ignoredFiles: args.ignoredFiles,
         }, { parent: this });
 
         this.registerOutputs({
