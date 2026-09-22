@@ -40,16 +40,31 @@
   },
   "typesVersions": {
     "*": {
-      "artifactregistry/*": ["dist/artifactregistry/*"],
-      "cloudbuild/*": ["dist/cloudbuild/*"],
-      "cloudbuildv2/*": ["dist/cloudbuildv2/*"],
-      "cloudrunv2/*": ["dist/cloudrunv2/*"],
-      "developerconnect/*": ["dist/developerconnect/*"],
-      "projects/*": ["dist/projects/*"],
-      "serviceaccount/*": ["dist/serviceaccount/*"]
+      "artifactregistry/*": [
+        "dist/artifactregistry/*"
+      ],
+      "cloudbuild/*": [
+        "dist/cloudbuild/*"
+      ],
+      "cloudbuildv2/*": [
+        "dist/cloudbuildv2/*"
+      ],
+      "cloudrunv2/*": [
+        "dist/cloudrunv2/*"
+      ],
+      "developerconnect/*": [
+        "dist/developerconnect/*"
+      ],
+      "projects/*": [
+        "dist/projects/*"
+      ],
+      "serviceaccount/*": [
+        "dist/serviceaccount/*"
+      ]
     }
   },
   "scripts": {
+    "prepare": "npm run build",
     "build": "tsc",
     "prepublishOnly": "npm run build"
   },
